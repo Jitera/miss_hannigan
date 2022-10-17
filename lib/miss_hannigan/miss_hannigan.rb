@@ -5,18 +5,14 @@ module MissHannigan
     def has_many(name, scope = nil, **options, &extension)
       nullify_then_purge = detect_nullify_then_purge(options)
       super.tap do |reflection|
-        if nullify_then_purge && ActiveRecord::Base.connection.tables.include?(name.to_s)
-          connect_nullify_then_purge(reflection, name)
-        end
+        connect_nullify_then_purge(reflection, name) if nullify_then_purge
       end
     end
 
     def has_one(name, scope = nil, **options, &extension)
       nullify_then_purge = detect_nullify_then_purge(options)
       super.tap do |reflection|
-        if nullify_then_purge && ActiveRecord::Base.connection.tables.include?(name.to_s)
-          connect_nullify_then_purge(reflection, name)
-        end
+        connect_nullify_then_purge(reflection, name) if nullify_then_purge
       end
     end
 
@@ -35,7 +31,6 @@ module MissHannigan
 
       # I bet folks are going to forget to do the migration of foreign_keys to accept null. Rails defaults
       # to not allow null.
-      # NOTE: We will just make sure that it has a migration to change column null
       # if !reflection_details.klass.columns.find { |c| c.name == reflection_details.foreign_key }.null
       #   raise "The foreign key must be nullable to support MissHannigan. You should create a migration to:
       #     change_column_null :#{name.to_s}, :#{reflection_details.foreign_key}, true"
